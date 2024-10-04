@@ -21,3 +21,15 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# Node.js
+node_modules/
+
+# File di ambiente
+backend/.env
+
+# Log files
+*.log
+
+# Cache di npm
+npm-debug.log*
