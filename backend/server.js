@@ -3,7 +3,7 @@ const cors = require('cors');
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-
+const taskRoutes = require('./routes/tasks');
 //Importare e configurare
 require('dotenv').config();
 
@@ -15,7 +15,7 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
-// Connessione a MongoDB
+// Connessione al database
 mongoose.connect(process.env.MONGO_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
@@ -23,6 +23,8 @@ mongoose.connect(process.env.MONGO_URI, {
 .then(() => console.log('Connesso a MongoDB'))
 .catch((err) => console.error('Errore connessione MongoDB:', err));
 
+// Rotte
+app.use('/api/tasks', taskRoutes);
 // Modello Utente (esempio base)
 const UserSchema = new mongoose.Schema({
   username: { type: String, required: true, unique: true },
