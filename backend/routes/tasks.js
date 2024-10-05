@@ -58,5 +58,22 @@ router.put('/:id/status', authenticateJWT, async (req, res) => {
     res.status(500).json({ message: 'Errore nel server' });
   }
 });
+// Ottieni i task dell'utente autenticato con filtri opzionali per stato
+router.get('/', authenticateJWT, async (req, res) => {
+    const { status } = req.query;
+  
+    let filter = { assignedTo: req.user.id };
+    if (status) {
+      filter.status = status;
+    }
+  
+    try {
+      const tasks = await Task.find(filter);
+      res.json(tasks);
+    } catch (err) {
+      res.status(500).json({ message: 'Errore nel server' });
+    }
+  });
+  
 
 module.exports = router;
