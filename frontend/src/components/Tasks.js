@@ -1,60 +1,79 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
 const Tasks = () => {
-    const [tasks, setTasks] = useState([]);
-    const [filter, setFilter] = useState('');
-  
-    useEffect(() => {
-        const fetchTasks = async () => {
-          const response = await axios.get(`http://localhost:5000/api/tasks`, {
-            headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-            params: { status: filter },
-          });
-          setTasks(response.data);
-        };
-    
-        fetchTasks();
-      }, [filter]);
+  const [tasks, setTasks] = useState([]);
+  const [filter, setFilter] = useState({
+    status: '',
+    priority: '',
+    dueDateBefore: '',
+    dueDateAfter: '',
+  });
 
-  const updateTaskStatus = async (taskId, status) => {
-    await axios.put(`http://localhost:5000/api/tasks/${taskId}/status`, { status }, {
-      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-    });
+  useEffect(() => {
+    const fetchTasks = async () => {
+      const response = await axios.get('http://localhost:5000/api/tasks', {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+        params: filter,
+      });
+      setTasks(response.data);
+    };
 
-    setTasks(tasks.map(task => task._id === taskId ? { ...task, status } : task));
+    fetchTasks();
+  }, [filter]);
+
+  const handleFilterChange = (e) => {
+    const { name, value } = e.target;
+    setFilter({ ...filter, [name]: value });
   };
-  const isDueSoon = (dueDate) => {
-    const today = new Date();
-    const due = new Date(dueDate);
-    const timeDiff = due.getTime() - today.getTime();
-    const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
-    return daysDiff <= 1 && daysDiff >= 0;  // Task in scadenza entro 1 giorni
-  };
+
   return (
     <div>
-      <h2>I miei task</h2>
+      <h2>Task</h2>
 
-      {/* Filtro per stato del task */}
-      <select value={filter} onChange={(e) => setFilter(e.target.value)}>
-        <option value="">Tutti</option>
-        <option value="Da fare">Da fare</option>
-        <option value="In corso">In corso</option>
-        <option value="Completato">Completato</option>
-      </select>
+      {/* Filtri */}
+      <div>
+        <select name="status" value={filter.status} onChange={handleFilterChange}>
+          <option value="">Tutti</option>
+          <option value="Da fare">Da fare</option>
+          <option value="In corso">In corso</option>
+          <option value="Completato">Completato</option>
+        </select>
 
+        <select name="priority" value={filter.priority} onChange={handleFilterChange}>
+          <option value="">Tutte le priorità</option>
+          <option value="Alta">Alta</option>
+          <option value="Media">Media</option>
+          <option value="Bassa">Bassa</option>
+        </select>
+
+        <input
+          type="date"
+          name="dueDateAfter"
+          value={filter.dueDateAfter}
+          onChange={handleFilterChange}
+          placeholder="Dopo"
+        />
+
+        <input
+          type="date"
+          name="dueDateBefore"
+          value={filter.dueDateBefore}
+          onChange={handleFilterChange}
+          placeholder="Prima"
+        />
+      </div>
+
+      {/* Lista Task */}
       <ul>
         {tasks.map(task => (
           <li key={task._id}>
-            {task.title} - {task.status} - Priorità: {task.priority}
-            {isDueSoon(task.dueDate) && <span style={{ color: 'red' }}> In scadenza!</span>}
-            {task.status !== 'Completato' && (
-              <button onClick={() => updateTaskStatus(task._id, 'Completato')}>Completa</button>
-            )}
+            {task.title} - {task.priority} - {task.status}
           </li>
         ))}
       </ul>
     </div>
   );
 };
+
 export default Tasks;

@@ -91,5 +91,62 @@ router.get('/', authenticateJWT, async (req, res) => {
     res.status(500).json({ message: 'Errore nel server' });
   }
 });
-
+// Modifica un task esistente (solo per admin o assegnatario)
+router.put('/:id', authenticateJWT, async (req, res) => {
+    const { title, description, dueDate, assignedTo, priority } = req.body;
+  
+    try {
+      const task = await Task.findById(req.params.id);
+      if (!task) {
+        return res.status(404).json({ message: 'Task non trovato' });
+      }
+  
+      // Controlla se l'utente è l'admin o l'assegnatario
+      if (req.user.role !== 'admin' && task.assignedTo.toString() !== req.user.id) {
+        return res.status(403).json({ message: 'Accesso negato' });
+      }
+  
+      // Aggiorna i campi del task
+      if (title) task.title = title;
+      if (description) task.description = description;
+      if (dueDate) task.dueDate = dueDate;
+      if (assignedTo) task.assignedTo = assignedTo;
+      if (priority) task.priority = priority;
+  
+      await task.save();
+      res.json({ message: 'Task aggiornato con successo', task });
+    } catch (err) {
+      res.status(500).json({ message: 'Errore nel server' });
+    }
+  });
+// Ottieni i task dell'utente autenticato con filtri opzionali per stato, priorità e scadenza
+router.get('/', authenticateJWT, async (req, res) => {
+    const { status, priority, dueDateBefore, dueDateAfter } = req.query;
+  
+    let filter = { assignedTo: req.user.id };
+  
+    if (status) {
+      filter.status = status;
+    }
+    if (priority) {
+      filter.priority = priority;
+    }
+    if (dueDateBefore || dueDateAfter) {
+      filter.dueDate = {};
+      if (dueDateBefore) {
+        filter.dueDate.$lte = new Date(dueDateBefore);
+      }
+      if (dueDateAfter) {
+        filter.dueDate.$gte = new Date(dueDateAfter);
+      }
+    }
+  
+    try {
+      const tasks = await Task.find(filter);
+      res.json(tasks);
+    } catch (err) {
+      res.status(500).json({ message: 'Errore nel server' });
+    }
+  });
+    
 module.exports = router;

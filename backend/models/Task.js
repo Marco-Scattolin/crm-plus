@@ -6,7 +6,7 @@ const TaskSchema = new mongoose.Schema({
   assignedTo: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   status: { type: String, enum: ['Da fare', 'In corso', 'Completato'], default: 'Da fare' },
   dueDate: { type: Date },
-  priority: { type: String, enum: ['Alta', 'Media', 'Bassa'], default: 'Media' },  // Nuovo campo di priorità
+  priority: { type: String, enum: ['Alta', 'Media', 'Bassa'], default: 'Media' },  
 });
 
 

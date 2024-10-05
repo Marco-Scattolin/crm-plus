@@ -4,6 +4,9 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const taskRoutes = require('./routes/tasks');
+const commentRoutes = require('./routes/comments');
+
+
 //Importare e configurare
 require('dotenv').config();
 require('./cron/checkTaskDueDates');  
@@ -163,7 +166,8 @@ app.delete('/api/users/:id', authenticateJWT, async (req, res) => {
     res.status(500).json({ message: 'Errore nel server' });
   }
 });
-
+// Rotte per i commenti
+app.use('/api/comments', commentRoutes);
 // Avvio del server
 app.listen(PORT, () => {
   console.log(`Server avviato sulla porta ${PORT}`);
