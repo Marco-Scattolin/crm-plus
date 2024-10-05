@@ -112,6 +112,55 @@ app.get('/api/dashboard', authenticateJWT, (req, res) => {
   res.json({ message: `Benvenuto ${req.user.role}, hai accesso alla dashboard.` });
 });
 
+// Rotta per ottenere tutti gli utenti (solo per admin)
+app.get('/api/users', authenticateJWT, async (req, res) => {
+  if (req.user.role !== 'admin') {
+    return res.status(403).json({ message: 'Accesso negato' });
+  }
+
+  try {
+    const users = await User.find({}, 'username role'); // Ottieni solo username e ruolo
+    res.json(users);
+  } catch (err) {
+    res.status(500).json({ message: 'Errore nel server' });
+  }
+});
+// Rotta per modificare il ruolo di un utente (solo per admin)
+app.put('/api/users/:id/role', authenticateJWT, async (req, res) => {
+  if (req.user.role !== 'admin') {
+    return res.status(403).json({ message: 'Accesso negato' });
+  }
+
+  const { role } = req.body;
+
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) {
+      return res.status(404).json({ message: 'Utente non trovato' });
+    }
+
+    user.role = role;
+    await user.save();
+
+    res.json({ message: 'Ruolo aggiornato con successo' });
+  } catch (err) {
+    res.status(500).json({ message: 'Errore nel server' });
+  }
+});
+// Rotta per eliminare un utente (solo per admin)
+app.delete('/api/users/:id', authenticateJWT, async (req, res) => {
+  if (req.user.role !== 'admin') {
+    return res.status(403).json({ message: 'Accesso negato' });
+  }
+
+  try {
+    await User.findByIdAndDelete(req.params.id);
+    res.json({ message: 'Utente eliminato con successo' });
+  } catch (err) {
+    res.status(500).json({ message: 'Errore nel server' });
+  }
+});
+
 // Avvio del server
 app.listen(PORT, () => {
   console.log(`Server avviato sulla porta ${PORT}`);
