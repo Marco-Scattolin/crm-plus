@@ -6,6 +6,7 @@ const jwt = require('jsonwebtoken');
 const taskRoutes = require('./routes/tasks');
 //Importare e configurare
 require('dotenv').config();
+require('./cron/checkTaskDueDates');  
 
 // Inizializzazione dell'app Express
 const app = express();

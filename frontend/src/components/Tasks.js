@@ -29,7 +29,7 @@ const Tasks = () => {
     const due = new Date(dueDate);
     const timeDiff = due.getTime() - today.getTime();
     const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
-    return daysDiff <= 2 && daysDiff >= 0;  // Task in scadenza entro 2 giorni
+    return daysDiff <= 1 && daysDiff >= 0;  // Task in scadenza entro 1 giorni
   };
   return (
     <div>
