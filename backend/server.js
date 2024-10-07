@@ -3,40 +3,38 @@ const cors = require('cors');
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const loginRoutes = require('./auth/login');
 const taskRoutes = require('./routes/tasks');
 const commentRoutes = require('./routes/comments');
-
+const User = require('./models/User'); 
 
 //Importare e configurare
 require('dotenv').config();
-require('./cron/checkTaskDueDates');  
+require('./cron/checkTaskDueDates');
 
 // Inizializzazione dell'app Express
-const app = express();
-const PORT = process.env.PORT || 5000;
+const app = express();  // Spostato qui in alto
+const PORT = process.env.PORT || 5001;
 
 // Middleware
 app.use(cors());
 app.use(express.json());
 
+// Usa le rotte di autenticazione
+app.use('/api/auth', loginRoutes); // DEVE essere dopo l'inizializzazione di `app`
+
 // Connessione al database
-mongoose.connect(process.env.MONGO_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
+mongoose.connect(process.env.MONGO_URI)
+  .then(() => console.log('Connesso a MongoDB'))
+  .catch((err) => console.error('Errore connessione MongoDB:', err
+    
+  ))
+
 .then(() => console.log('Connesso a MongoDB'))
 .catch((err) => console.error('Errore connessione MongoDB:', err));
 
 // Rotte
 app.use('/api/tasks', taskRoutes);
-// Modello Utente (esempio base)
-const UserSchema = new mongoose.Schema({
-  username: { type: String, required: true, unique: true },
-  password: { type: String, required: true },
-  role: { type: String, default: 'user' }, // Default: user, può essere admin o altri
-});
-
-const User = mongoose.model('User', UserSchema);
 
 // Funzione per generare JWT
 const generateToken = (user) => {
@@ -72,31 +70,34 @@ app.post('/api/signup', async (req, res) => {
 });
 
 // Rotta di login
-app.post('/api/login', async (req, res) => {
-  const { username, password } = req.body;
-  
+app.post('/api/auth/login', async (req, res) => {
+  const { email, password } = req.body;
+
   try {
-    const user = await User.findOne({ username });
+    // Cerca l'utente nel database
+    const user = await User.findOne({ email });
     if (!user) {
-      return res.status(400).json({ message: 'Utente non trovato' });
+      return res.status(404).json({ message: 'Utente non trovato' });
     }
 
-    // Controllo password
+    // Verifica la password
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.status(400).json({ message: 'Password non corretta' });
+      return res.status(400).json({ message: 'Password errata' });
     }
 
-    // Genera token JWT
-    const token = generateToken(user);
-    res.json({ token });
+    // Genera un token JWT
+    const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    
+    // Restituisce il token e le informazioni dell'utente
+    res.json({ token, user: { id: user._id, email: user.email, role: user.role } });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: 'Errore nel server' });
+    res.status(500).json({ message: 'Errore del server' });
   }
 });
 
-// Middleware di autenticazione per proteggere le rotte
+// Middleware di autenticazione
 const authenticateJWT = (req, res, next) => {
   const token = req.headers.authorization;
 
@@ -131,6 +132,7 @@ app.get('/api/users', authenticateJWT, async (req, res) => {
     res.status(500).json({ message: 'Errore nel server' });
   }
 });
+
 // Rotta per modificare il ruolo di un utente (solo per admin)
 app.put('/api/users/:id/role', authenticateJWT, async (req, res) => {
   if (req.user.role !== 'admin') {
@@ -153,6 +155,7 @@ app.put('/api/users/:id/role', authenticateJWT, async (req, res) => {
     res.status(500).json({ message: 'Errore nel server' });
   }
 });
+
 // Rotta per eliminare un utente (solo per admin)
 app.delete('/api/users/:id', authenticateJWT, async (req, res) => {
   if (req.user.role !== 'admin') {
@@ -166,8 +169,10 @@ app.delete('/api/users/:id', authenticateJWT, async (req, res) => {
     res.status(500).json({ message: 'Errore nel server' });
   }
 });
+
 // Rotte per i commenti
 app.use('/api/comments', commentRoutes);
+
 // Avvio del server
 app.listen(PORT, () => {
   console.log(`Server avviato sulla porta ${PORT}`);

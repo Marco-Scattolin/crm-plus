@@ -7,7 +7,7 @@ const Comments = ({ taskId }) => {
 
   useEffect(() => {
     const fetchComments = async () => {
-      const response = await axios.get(`http://localhost:5000/api/comments/${taskId}`, {
+      const response = await axios.get(`http://localhost:5001/api/comments/${taskId}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       });
       setComments(response.data);
@@ -18,7 +18,7 @@ const Comments = ({ taskId }) => {
 
   const addComment = async () => {
     const response = await axios.post(
-      `http://localhost:5000/api/comments/${taskId}`,
+      `http://localhost:5001/api/comments/${taskId}`,
       { content },
       { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
     );

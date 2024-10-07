@@ -12,7 +12,7 @@ const Tasks = () => {
 
   useEffect(() => {
     const fetchTasks = async () => {
-      const response = await axios.get('http://localhost:5000/api/tasks', {
+      const response = await axios.get('http://localhost:5001/api/tasks', {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
         params: filter,
       });

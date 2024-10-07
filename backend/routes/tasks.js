@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Task = require('../models/Task');
-const { sendTaskNotification } = require('../utils/mailer');  // Importa la funzione per l'email
+const { sendTaskNotification } = require('../utils/mailer');
 const User = require('../models/User');  // Modello per gli utenti
 const authenticateJWT = require('../middleware/authenticateJWT'); // Middleware per autenticazione
 

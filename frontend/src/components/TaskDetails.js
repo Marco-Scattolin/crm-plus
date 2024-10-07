@@ -20,7 +20,7 @@ const TaskDetails = ({ task }) => {
   // Funzione per aggiornare il task
   const updateTask = async () => {
     try {
-      const response = await axios.put(`http://localhost:5000/api/tasks/${task._id}`, formData, {
+      const response = await axios.put(`http://localhost:5001/api/tasks/${task._id}`, formData, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       });
       console.log('Task aggiornato:', response.data);
